@@ -43,3 +43,17 @@
 
 \- Status: Complete
 
+
+
+\## 2026-10-20 — Model architecture built and verified
+
+\- Created model.py with LightweightUNet: pretrained MobileNetV2 encoder + SE attention blocks in decoder
+
+\- Modified first conv layer to accept 1-channel (grayscale) input instead of 3-channel RGB
+
+\- Verified forward pass: input \[4,1,256,256] -> output \[4,1,256,256]
+
+\- Total parameters: 5,565,569 (5.57M) - significantly lighter than Deep-MiSR's 13.79M
+
+\- Status: Complete
+

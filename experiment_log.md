@@ -57,3 +57,15 @@
 
 \- Status: Complete
 
+
+
+\## 2026-10-22 — GPU setup fixed
+
+\- Initial PyTorch install was CPU-only (cu121 tag unavailable for Python 3.13)
+
+\- Reinstalled using cu124 CUDA build
+
+\- Verified: CUDA available = True, Device = NVIDIA GeForce GTX 1650
+
+\- Status: Complete
+

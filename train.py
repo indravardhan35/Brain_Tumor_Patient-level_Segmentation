@@ -5,27 +5,31 @@ from model import LightweightUNet
 from losses import CombinedLoss, dice_score
 import time
 
-# ---- Setup ----
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# ---- REAL RUN: full dataset ----
-train_dataset = BrainTumorDataset(split_name="train")
-val_dataset = BrainTumorDataset(split_name="val")
+# Training set: augmentation ON. Validation set: augmentation OFF (never augment val/test)
+train_dataset = BrainTumorDataset(split_name="train", augment=True)
+val_dataset = BrainTumorDataset(split_name="val", augment=False)
 
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=0)
 val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, num_workers=0)
 
 print(f"Train samples: {len(train_dataset)}, Val samples: {len(val_dataset)}")
 
-# ---- Model, loss, optimizer ----
 model = LightweightUNet(num_classes=1, pretrained=True).to(device)
 criterion = CombinedLoss(dice_weight=0.5, bce_weight=0.5)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-# ---- Training loop ----
-NUM_EPOCHS = 20
+# Reduce LR when val loss stops improving
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, mode='min', factor=0.5, patience=3
+)
+
+NUM_EPOCHS = 40  # more epochs now, since early stopping will cut it short if needed
+PATIENCE = 7     # stop if val dice doesn't improve for 7 epochs in a row
 best_val_dice = 0.0
+epochs_without_improvement = 0
 
 for epoch in range(NUM_EPOCHS):
     start_time = time.time()
@@ -59,13 +63,21 @@ for epoch in range(NUM_EPOCHS):
     val_loss /= len(val_loader)
     val_dice /= len(val_loader)
     
-    elapsed = time.time() - start_time
-    print(f"Epoch {epoch+1}/{NUM_EPOCHS} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {val_dice:.4f} | Time: {elapsed:.1f}s")
+    scheduler.step(val_loss)
+    current_lr = optimizer.param_groups[0]['lr']
     
-    # Save the best model so far
+    elapsed = time.time() - start_time
+    print(f"Epoch {epoch+1}/{NUM_EPOCHS} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {val_dice:.4f} | LR: {current_lr:.6f} | Time: {elapsed:.1f}s")
+    
     if val_dice > best_val_dice:
         best_val_dice = val_dice
+        epochs_without_improvement = 0
         torch.save(model.state_dict(), "best_model.pth")
         print(f"  -> New best model saved (Val Dice: {val_dice:.4f})")
+    else:
+        epochs_without_improvement += 1
+        if epochs_without_improvement >= PATIENCE:
+            print(f"\nEarly stopping triggered after {epoch+1} epochs (no improvement for {PATIENCE} epochs)")
+            break
 
 print(f"\nTraining complete! Best Val Dice: {best_val_dice:.4f}")

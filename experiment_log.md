@@ -69,3 +69,19 @@
 
 \- Status: Complete
 
+
+
+\## 2026-10-22 — First full training run (baseline, patient-level split)
+
+\- Trained LightweightUNet (MobileNetV2 + SE attention) on full dataset: 2462 train / 280 val
+
+\- Loss: CombinedLoss (0.5 Dice + 0.5 BCE), Adam optimizer, lr=1e-4, 20 epochs, batch size 8
+
+\- Best Val Dice: 0.6922 (epoch 20)
+
+\- Observed overfitting: train loss dropped to 0.039 while val Dice plateaued \~0.66-0.69 from epoch 10 onward
+
+\- Comparison: Deep-MiSR reports 0.9281 Dice (random split) - gap expected at this stage, no augmentation/scheduling used yet
+
+\- Status: Working baseline established, needs tuning (augmentation, LR scheduling) to close gap
+

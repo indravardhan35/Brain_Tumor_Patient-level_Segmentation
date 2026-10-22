@@ -2,42 +2,34 @@ import torch
 from torch.utils.data import DataLoader
 from dataset import BrainTumorDataset
 from model import LightweightUNet
-from losses import DiceLoss, dice_score
+from losses import CombinedLoss, dice_score
 import time
 
 # ---- Setup ----
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# For the quick sanity check: use a SMALL subset first
-SANITY_CHECK = True
-SUBSET_SIZE = 50  # just 50 images, to test the pipeline quickly
-
+# ---- REAL RUN: full dataset ----
 train_dataset = BrainTumorDataset(split_name="train")
 val_dataset = BrainTumorDataset(split_name="val")
 
-if SANITY_CHECK:
-    from torch.utils.data import Subset
-    train_dataset = Subset(train_dataset, range(min(SUBSET_SIZE, len(train_dataset))))
-    val_dataset = Subset(val_dataset, range(min(20, len(val_dataset))))
-
-train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=0)
+val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, num_workers=0)
 
 print(f"Train samples: {len(train_dataset)}, Val samples: {len(val_dataset)}")
 
 # ---- Model, loss, optimizer ----
 model = LightweightUNet(num_classes=1, pretrained=True).to(device)
-criterion = DiceLoss()
+criterion = CombinedLoss(dice_weight=0.5, bce_weight=0.5)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
 # ---- Training loop ----
-NUM_EPOCHS = 3  # just a few, for the sanity check
+NUM_EPOCHS = 20
+best_val_dice = 0.0
 
 for epoch in range(NUM_EPOCHS):
     start_time = time.time()
     
-    # Training phase
     model.train()
     train_loss = 0.0
     for images, masks, labels in train_loader:
@@ -53,7 +45,6 @@ for epoch in range(NUM_EPOCHS):
     
     train_loss /= len(train_loader)
     
-    # Validation phase
     model.eval()
     val_loss = 0.0
     val_dice = 0.0
@@ -70,5 +61,11 @@ for epoch in range(NUM_EPOCHS):
     
     elapsed = time.time() - start_time
     print(f"Epoch {epoch+1}/{NUM_EPOCHS} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {val_dice:.4f} | Time: {elapsed:.1f}s")
+    
+    # Save the best model so far
+    if val_dice > best_val_dice:
+        best_val_dice = val_dice
+        torch.save(model.state_dict(), "best_model.pth")
+        print(f"  -> New best model saved (Val Dice: {val_dice:.4f})")
 
-print("\nSanity check complete!")
+print(f"\nTraining complete! Best Val Dice: {best_val_dice:.4f}")

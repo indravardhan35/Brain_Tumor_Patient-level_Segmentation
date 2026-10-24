@@ -105,3 +105,15 @@
 
 \- Status: Improved baseline established
 
+
+
+\## 2026-10-24 — Random split built (for leakage comparison)
+
+\- Built random\_split.json: same 3064 images split randomly by image, not by patient
+
+\- Measured actual leakage: 156/233 patients in both Train \& Val, 154/233 in both Train \& Test, 111/233 in both Val \& Test
+
+\- This confirms, with real numbers, the data leakage problem described in Deep-MiSR's limitations
+
+\- Status: Complete, strong evidence for patient-level split argument
+

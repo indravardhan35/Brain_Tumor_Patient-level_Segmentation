@@ -85,3 +85,23 @@
 
 \- Status: Working baseline established, needs tuning (augmentation, LR scheduling) to close gap
 
+
+
+\## 2026-10-22 — Training improvements: augmentation + LR scheduling + early stopping
+
+\- Added random flip/rotation/brightness augmentation (training set only)
+
+\- Added ReduceLROnPlateau scheduler (factor=0.5, patience=3)
+
+\- Added early stopping (patience=7 epochs)
+
+\- Retrained on full dataset: 2462 train / 280 val
+
+\- Best Val Dice improved: 0.6922 -> 0.7320
+
+\- Training stopped automatically at epoch 36 (early stopping triggered)
+
+\- LR reduced 3 times during training (0.0001 -> 0.0000125)
+
+\- Status: Improved baseline established
+

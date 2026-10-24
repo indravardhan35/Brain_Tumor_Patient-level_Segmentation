@@ -117,3 +117,21 @@
 
 \- Status: Complete, strong evidence for patient-level split argument
 
+
+
+\## 2026-10-24 — Random split training complete: leakage effect quantified
+
+\- Trained identical model/hyperparameters on random\_split.json (same architecture, same code as patient-level run)
+
+\- Best Val Dice (random split): 0.8236
+
+\- Best Val Dice (patient-level split): 0.7320
+
+\- Difference: +0.0916 (9.16 percentage points) attributable purely to data leakage
+
+\- Confirms with direct, reproducible evidence that random splitting inflates reported performance
+
+\- This is the project's core contribution #1, demonstrated empirically
+
+\- Status: Complete - key result established
+

@@ -72,3 +72,45 @@ class WeightedCombinedLoss(nn.Module):
         weighted_bce = (bce_per_sample * weights).mean()
         
         return self.dice_weight * dice + self.bce_weight * weighted_bce
+
+class TverskyLoss(nn.Module):
+    """
+    Tversky Loss: generalization of Dice loss with separate control over
+    false positives (alpha) and false negatives (beta).
+    beta > alpha pushes the model to reduce false negatives (catch more of the tumor),
+    which directly targets glioma's diffuse boundary problem.
+    """
+    def __init__(self, alpha=0.3, beta=0.7, smooth=1e-6):
+        super().__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.smooth = smooth
+
+    def forward(self, pred, target):
+        pred = pred.view(-1)
+        target = target.view(-1)
+        
+        true_pos = (pred * target).sum()
+        false_neg = (target * (1 - pred)).sum()
+        false_pos = ((1 - target) * pred).sum()
+        
+        tversky = (true_pos + self.smooth) / (
+            true_pos + self.alpha * false_pos + self.beta * false_neg + self.smooth
+        )
+        
+        return 1 - tversky
+
+
+class CombinedTverskyLoss(nn.Module):
+    """Combines Tversky Loss with BCE for stable training"""
+    def __init__(self, tversky_weight=0.7, bce_weight=0.3, alpha=0.3, beta=0.7):
+        super().__init__()
+        self.tversky_loss = TverskyLoss(alpha=alpha, beta=beta)
+        self.bce_loss = nn.BCELoss()
+        self.tversky_weight = tversky_weight
+        self.bce_weight = bce_weight
+
+    def forward(self, pred, target):
+        tversky = self.tversky_loss(pred, target)
+        bce = self.bce_loss(pred, target)
+        return self.tversky_weight * tversky + self.bce_weight * bce

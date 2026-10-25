@@ -135,3 +135,47 @@
 
 \- Status: Complete - key result established
 
+
+
+\## 2026-10-24 — Per-class baseline established (patient-level model, test set)
+
+\- Evaluated best\_model.pth on held-out test set (322 images, never used in training/val)
+
+\- Per-class Dice: meningioma 0.9164 (n=103), glioma 0.6694 (n=117), pituitary 0.7567 (n=102)
+
+\- Overall test Dice: 0.7761
+
+\- Confirms glioma as weakest class, consistent with literature survey findings
+
+\- This is the "before" baseline for the glioma-focused enhancement
+
+\- Status: Complete
+
+
+
+\## 2026-10-25 — Glioma-weighted loss attempt (class weight = 2.0 on BCE component)
+
+\- Modified loss function: WeightedCombinedLoss applies 2x weight to glioma samples in the BCE term
+
+\- Trained with identical architecture, augmentation, scheduler, early stopping as baseline
+
+\- Overall Val Dice during training: 0.7423 (appeared better than baseline's 0.7320)
+
+\- However, per-class TEST evaluation showed the opposite:
+
+&#x20; - Meningioma: 0.9164 -> 0.9115 (flat)
+
+&#x20; - Glioma: 0.6694 -> 0.6519 (WORSE, not better)
+
+&#x20; - Pituitary: 0.7567 -> 0.7075 (worse)
+
+&#x20; - Overall test Dice: 0.7761 -> 0.7526 (worse)
+
+\- Conclusion: class-weighted BCE did not improve glioma segmentation; overall val Dice improvement was misleading (masked per-class degradation)
+
+\- Root cause suspected: weighting whole-image loss is too blunt an instrument for glioma's actual problem (diffuse/ambiguous boundaries, not just underrepresentation)
+
+\- Next step: try a boundary-aware loss (Tversky) instead of class-weighted BCE
+
+\- Status: Negative result, informative, documented
+

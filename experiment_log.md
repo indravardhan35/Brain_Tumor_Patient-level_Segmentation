@@ -209,3 +209,49 @@ vs baseline: glioma -0.0216, overall -0.0135
 
 Status: NEGATIVE. Third failed glioma attempt; suggests the limit is boundary/representation, not class weighting.
 
+
+
+\## 2026-10-29 — Tversky + glioma oversampling (2.5x WeightedRandomSampler)
+
+Config: LightweightUNet, patient-level split, CombinedTverskyLoss, augment=True
+
+Result (test Dice): men 0.9036 | glioma 0.6478 | pit 0.7518 | overall 0.7626
+
+Comparison: glioma -0.0216 and overall -0.0135 vs baseline (0.6694 / 0.7761)
+
+Status: NEGATIVE. Third loss/sampling attempt with no glioma gain.
+
+
+
+\## 2026-10-29 — Glioma error analysis (baseline model, analyze\_glioma\_errors.py)
+
+Config: best\_model.pth, patient-level test set, 117 glioma slices, 8 patients
+
+Findings:
+
+\- Per-patient glioma Dice ranges 0.54 to 0.84, so differences of about 0.02 between loss experiments are within noise.
+
+\- Dice by tumour size: small 0.662, medium 0.628, large 0.718. Small tumours are over-segmented (recall 0.76 > precision 0.65); large tumours are under-segmented (precision 0.82 > recall 0.69).
+
+\- 11 of 117 slices (9%) have Dice < 0.1, spread over 6 of 8 patients (MR033420 has 5). Without them, glioma Dice is about 0.74.
+
+Comparison: n/a (diagnostic, no new model)
+
+Status: DIAGNOSTIC. Failures are dominated by detection/localisation, not boundary fuzziness.
+
+
+
+\## 2026-10-29 — Confidence check on misses (check\_confidence.py)
+
+Config: same model; threshold sweep 0.5 / 0.3 / 0.2 on the 11 slices with Dice < 0.1
+
+Findings:
+
+\- 4 slices are blind (max\_prob 0.002 to 0.021, Dice 0 at every threshold).
+
+\- 6 slices are confidently wrong (max\_prob about 1.0, Dice about 0): the model segments a structure other than the labelled tumour. 1 slice (max\_prob 0.746) is a partial wrong-place case.
+
+\- Lowering the threshold recovers nothing, so under-confidence is ruled out and loss reweighting cannot fix these slices.
+
+Status: DIAGNOSTIC. Hypothesis to test: mixed imaging planes / missing global context. Next: inspect the worst-case images, then choose the enhancement (ASPP multi-scale context vs boundary module), and consider patient-grouped k-fold CV.
+

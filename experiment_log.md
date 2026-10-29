@@ -255,3 +255,16 @@ Findings:
 
 Status: DIAGNOSTIC. Hypothesis to test: mixed imaging planes / missing global context. Next: inspect the worst-case images, then choose the enhancement (ASPP multi-scale context vs boundary module), and consider patient-grouped k-fold CV.
 
+
+\## 2026-10-29 — Visual inspection of the 11 glioma misses (Dice < 0.1)
+
+Findings (manual review of miss\_montage.png):
+
+\- Group A (idx 22, 29, 206, 236; 237 nearly empty): tumour not clearly visible; 3 of 4 blind slices are sagittal/coronal. Likely atypical/edge slices.
+
+\- Group B (idx 13, 18, 19, 161, 260; 40 subtle): axial, tumour obvious, model confident but predicts adjacent or wrong region (localisation/context failure, not boundary fuzziness alone).
+
+\- Only 4 of 11 failures are non-axial, so plane mixing alone does not explain them (plane distribution of the dataset still to be checked).
+
+Status: DIAGNOSTIC. Next: ASPP multi-scale context module on bottleneck (Group B), with multi-seed or grouped-CV evaluation.
+

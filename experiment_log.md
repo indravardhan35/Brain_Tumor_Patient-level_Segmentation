@@ -179,3 +179,33 @@
 
 \- Status: Negative result, informative, documented
 
+
+
+\## 2026-10-25 — Tversky loss attempt (alpha=0.3, beta=0.7)
+
+\- Combined Tversky (0.7 weight) + BCE (0.3 weight), beta>alpha to penalize false negatives more
+
+\- Per-class test Dice: meningioma 0.9129, glioma 0.6578, pituitary 0.7850, overall 0.7797
+
+\- Pituitary and overall improved vs baseline; glioma still did NOT improve (0.6578 vs 0.6694 baseline)
+
+\- Two loss-function approaches now tried (weighted BCE, Tversky) - neither improved glioma specifically
+
+\- Hypothesis: glioma's problem may be data-level (shape/size variability) rather than purely loss-weighting related
+
+\- Next step: try oversampling glioma via WeightedRandomSampler, combined with Tversky loss
+
+\- Status: Partial result, informative, glioma enhancement still unresolved
+
+
+
+\## 2026-10-29 — Tversky + glioma oversampling (2.5x WeightedRandomSampler)
+
+Config: LightweightUNet, patient-level split, CombinedTverskyLoss, augment=True
+
+Result (test Dice): men 0.9036 | glioma 0.6478 | pit 0.7518 | overall 0.7626
+
+vs baseline: glioma -0.0216, overall -0.0135
+
+Status: NEGATIVE. Third failed glioma attempt; suggests the limit is boundary/representation, not class weighting.
+

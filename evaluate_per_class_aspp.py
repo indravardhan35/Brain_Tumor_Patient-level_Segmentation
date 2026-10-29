@@ -6,13 +6,15 @@ from torch.utils.data import DataLoader
 
 from dataset import BrainTumorDataset
 from model_aspp import ASPPUNet
+from model import LightweightUNet
 
 ckpt = sys.argv[1] if len(sys.argv) > 1 else "best_model_aspp_seed0.pth"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ds = BrainTumorDataset("patient_level_split.json", "test", augment=False)
 loader = DataLoader(ds, batch_size=1, shuffle=False)
-model = ASPPUNet(num_classes=1, pretrained=False).to(device)
+model = (ASPPUNet(num_classes=1, pretrained=False) if "aspp" in ckpt
+         else LightweightUNet(num_classes=1, pretrained=False)).to(device)
 model.load_state_dict(torch.load(ckpt, map_location=device))
 model.eval()
 

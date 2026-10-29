@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from dataset import BrainTumorDataset
 from model_aspp import ASPPUNet
 from losses import CombinedLoss   # same loss as the baseline
+from model import LightweightUNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int, default=0)
@@ -16,6 +17,7 @@ parser.add_argument("--epochs", type=int, default=60)
 parser.add_argument("--batch_size", type=int, default=16)
 parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--patience", type=int, default=10)
+parser.add_argument("--model", choices=["baseline", "aspp"], default="aspp")
 args = parser.parse_args()
 
 random.seed(args.seed)
@@ -30,7 +32,8 @@ val_ds = BrainTumorDataset("patient_level_split.json", "val", augment=False)
 train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
 val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
-model = ASPPUNet(num_classes=1, pretrained=True).to(device)
+model = (ASPPUNet(num_classes=1, pretrained=True) if args.model == "aspp"
+         else LightweightUNet(num_classes=1, pretrained=True)).to(device)
 print("Parameters:", sum(p.numel() for p in model.parameters()))
 
 criterion = CombinedLoss()
@@ -74,7 +77,7 @@ for epoch in range(1, args.epochs + 1):
     if val_dice > best_val:
         best_val, bad_epochs = val_dice, 0
         best_state = copy.deepcopy(model.state_dict())
-        torch.save(best_state, f"best_model_aspp_seed{args.seed}.pth")
+        torch.save(best_state, f"best_model_{args.model}_seed{args.seed}.pth")
     else:
         bad_epochs += 1
         if bad_epochs >= args.patience:

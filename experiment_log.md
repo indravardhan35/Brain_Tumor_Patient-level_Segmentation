@@ -256,6 +256,7 @@ Findings:
 Status: DIAGNOSTIC. Hypothesis to test: mixed imaging planes / missing global context. Next: inspect the worst-case images, then choose the enhancement (ASPP multi-scale context vs boundary module), and consider patient-grouped k-fold CV.
 
 
+
 \## 2026-10-29 — Visual inspection of the 11 glioma misses (Dice < 0.1)
 
 Findings (manual review of miss\_montage.png):
@@ -267,4 +268,19 @@ Findings (manual review of miss\_montage.png):
 \- Only 4 of 11 failures are non-axial, so plane mixing alone does not explain them (plane distribution of the dataset still to be checked).
 
 Status: DIAGNOSTIC. Next: ASPP multi-scale context module on bottleneck (Group B), with multi-seed or grouped-CV evaluation.
+
+
+\## 2026-10-29 | Multi-seed baseline vs ASPP (patient-level split)
+
+Config: train\_aspp.py, Adam 1e-3, bs16, ReduceLROnPlateau(0.5, p4), ES p10, seeds 0/1/2, --model {baseline,aspp}
+
+Result (test Dice mean±std, men/gli/pit/overall):
+
+&#x20; Baseline 0.9243±0.0053 / 0.6842±0.0231 / 0.7872±0.0125 / 0.7937±0.0129
+
+&#x20; ASPP     0.9280±0.0021 / 0.6792±0.0075 / 0.7738±0.0092 / 0.7888±0.0039
+
+Comparison: ASPP glioma -0.005 vs baseline, within seed std (0.023). Seed-0 gain (+0.0165) was noise. ASPP has 7.93M vs 5.57M params.
+
+Status: NEGATIVE RESULT. ASPP not adopted as C2. Baseline seed-0 re-run differs from original train.py run (val 0.7448 vs 0.7320): script diff to be checked.
 

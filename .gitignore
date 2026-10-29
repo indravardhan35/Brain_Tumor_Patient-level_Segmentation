@@ -1,4 +1,6 @@
 data/
 *.json
+*.pth
 __pycache__/
 .ipynb_checkpoints/
+error_analysis/

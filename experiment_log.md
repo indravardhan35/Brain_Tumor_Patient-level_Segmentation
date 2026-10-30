@@ -270,6 +270,7 @@ Findings (manual review of miss\_montage.png):
 Status: DIAGNOSTIC. Next: ASPP multi-scale context module on bottleneck (Group B), with multi-seed or grouped-CV evaluation.
 
 
+
 \## 2026-10-29 | Multi-seed baseline vs ASPP (patient-level split)
 
 Config: train\_aspp.py, Adam 1e-3, bs16, ReduceLROnPlateau(0.5, p4), ES p10, seeds 0/1/2, --model {baseline,aspp}
@@ -283,4 +284,18 @@ Result (test Dice mean±std, men/gli/pit/overall):
 Comparison: ASPP glioma -0.005 vs baseline, within seed std (0.023). Seed-0 gain (+0.0165) was noise. ASPP has 7.93M vs 5.57M params.
 
 Status: NEGATIVE RESULT. ASPP not adopted as C2. Baseline seed-0 re-run differs from original train.py run (val 0.7448 vs 0.7320): script diff to be checked.
+
+
+
+\## 2026-10-30 | 5-fold CV: patient-grouped vs random-slice (baseline, seed 0)
+
+Config: train\_aspp.py recipe, 5 folds each, make\_cv\_folds.py (seed 42), bootstrap over 233 patients
+
+Result: overall 0.7730 \[0.751, 0.794] (patient) vs 0.8087 \[0.790, 0.826] (random); gap +0.0357 \[0.027, 0.045]
+
+&#x20; glioma 0.6757 vs 0.7278 (gap +0.0521 \[0.037, 0.068]); pituitary gap +0.0287; meningioma gap +0.0120
+
+Comparison: earlier single-run gap (9.16 pts, val set, old recipe) was an overestimate; controlled gap is \~3.6 pts
+
+Status: C1 confirmed with confidence intervals. Glioma per-patient Dice mean 0.646 (min 0.028, max 0.940).
 

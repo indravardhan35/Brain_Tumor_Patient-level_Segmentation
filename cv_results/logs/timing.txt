@@ -1,0 +1,9 @@
+patient fold 1 : 37.8 min
+patient fold 2 : 52.1 min
+patient fold 3 : 28.3 min
+patient fold 4 : 49.4 min
+random fold 0 : 41.2 min
+random fold 1 : 56.8 min
+random fold 2 : 51.6 min
+random fold 3 : 51.9 min
+random fold 4 : 67.1 min

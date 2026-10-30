@@ -18,6 +18,8 @@ parser.add_argument("--batch_size", type=int, default=16)
 parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--patience", type=int, default=10)
 parser.add_argument("--model", choices=["baseline", "aspp"], default="aspp")
+parser.add_argument("--split_file", default="patient_level_split.json")
+parser.add_argument("--tag", default="")
 args = parser.parse_args()
 
 random.seed(args.seed)
@@ -27,8 +29,8 @@ torch.cuda.manual_seed_all(args.seed)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-train_ds = BrainTumorDataset("patient_level_split.json", "train", augment=True)
-val_ds = BrainTumorDataset("patient_level_split.json", "val", augment=False)
+train_ds = BrainTumorDataset(args.split_file, "train", augment=True)
+val_ds = BrainTumorDataset(args.split_file, "val", augment=False)
 train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
 val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
@@ -77,7 +79,7 @@ for epoch in range(1, args.epochs + 1):
     if val_dice > best_val:
         best_val, bad_epochs = val_dice, 0
         best_state = copy.deepcopy(model.state_dict())
-        torch.save(best_state, f"best_model_{args.model}_seed{args.seed}.pth")
+        torch.save(best_state, f"best_model_{args.model}_seed{args.seed}{args.tag}.pth")
     else:
         bad_epochs += 1
         if bad_epochs >= args.patience:
